@@ -44,6 +44,8 @@ export default function MovingCar() {
       setRotationY((r) => r + turnSpeed)
     if (keysPressed['d'] || keysPressed['arrowright'])
       setRotationY((r) => r - turnSpeed)
+    if (keysPressed['r'])
+      setRotationY((r) => r=0)
 
     // Movement
     let direction = 0
