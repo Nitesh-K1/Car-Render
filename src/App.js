@@ -21,9 +21,10 @@ export default function App() {
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
       <Canvas shadows camera={{ position: [0, 5, 10], fov: 50 }}>
-        <ambientLight intensity={0.5} />
+        <ambientLight intensity={1} />
         <pointLight position={[10, 10, 10]} castShadow />
-        <directionalLight position={[5, 10, 5]} intensity={1.2} castShadow />
+        <directionalLight position={[0, 10, 0]} intensity={3} castShadow />
+        <hemisphereLight intensity={1} />
         <Physics>
           <MovingCar />
           <Football position={[0, 1, 0]} onGoal={handleGoal} />
