@@ -69,4 +69,4 @@ export default function GoalPosts({ onGoal }) {
   )
 }
 
-useGLTF.preload('/models/goalpost/scene.gltf')
+useGLTF.preload('/models/goalpost/scene.gltf');
