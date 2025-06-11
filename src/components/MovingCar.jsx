@@ -9,7 +9,7 @@ export default function MovingCar() {
   const carRef = useRef()
   carObjectRef.current = carRef
 
-  const speed = 0.3
+  const speed = 0.6
   const turnSpeed = 0.01
   const [rotationY, setRotationY] = useState(0)
   const [keysPressed, setKeysPressed] = useState({})
