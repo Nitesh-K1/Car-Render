@@ -1,11 +1,11 @@
 Model Information:
-* title:	Football ground
-* source:	https://sketchfab.com/3d-models/football-ground-959a67133e404f1a8707c410880d9c6b
-* author:	Cybertron B-127 (https://sketchfab.com/robo-reboot)
+* title:	Soccer Ground: FIFA size
+* source:	https://sketchfab.com/3d-models/soccer-ground-fifa-size-9dab134538cf448a97dac42544266055
+* author:	uzakiyo (https://sketchfab.com/uzakiyo)
 
 Model License:
 * license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 * requirements:	Author must be credited. Commercial use is allowed.
 
 If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
-This work is based on "Football ground" (https://sketchfab.com/3d-models/football-ground-959a67133e404f1a8707c410880d9c6b) by Cybertron B-127 (https://sketchfab.com/robo-reboot) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+This work is based on "Soccer Ground: FIFA size" (https://sketchfab.com/3d-models/soccer-ground-fifa-size-9dab134538cf448a97dac42544266055) by uzakiyo (https://sketchfab.com/uzakiyo) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
