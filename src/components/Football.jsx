@@ -31,7 +31,7 @@ export default function Football({ position, onGoal }) {
     // Speed limiting logic
     const currentVelocity = body.current.linvel();
     velocity.set(currentVelocity.x, currentVelocity.y, currentVelocity.z); // Convert to Vector3
-    const maxSpeed = 20; // Adjust this value
+    const maxSpeed = 40; // Adjust this value
 
     if (velocity.length() > maxSpeed) {
       velocity.normalize().multiplyScalar(maxSpeed); // Clamp speed
@@ -50,7 +50,7 @@ export default function Football({ position, onGoal }) {
     <RigidBody
       ref={body}
       colliders="ball"
-      restitution={0.9}  // Reduced for less bounce
+      restitution={1}  // Reduced for less bounce
       friction={0.7}
       linearDamping={0.3} // Adds air resistance
       position={position}
