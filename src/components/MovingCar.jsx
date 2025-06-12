@@ -15,7 +15,7 @@ export default function MovingCar() {
   const [keysPressed, setKeysPressed] = useState({})
 
   // Use scene instead of nodes
-  const { scene } = useGLTF('/models/scene.gltf')
+  const { scene } = useGLTF('/models/car/scene.gltf')
 
   useEffect(() => {
     const handleKeyDown = (e) =>
@@ -98,4 +98,4 @@ export default function MovingCar() {
 }
 
 // Preload GLTF
-useGLTF.preload('/models/scene.gltf')
+useGLTF.preload('/models/car/scene.gltf')
