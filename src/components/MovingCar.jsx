@@ -9,93 +9,78 @@ export default function MovingCar() {
   const carRef = useRef()
   carObjectRef.current = carRef
 
-  const speed = 0.3
-  const turnSpeed = 0.01
-  const [rotationY, setRotationY] = useState(0)
+  const speed = 20
+  const turnSpeed = 5
   const [keysPressed, setKeysPressed] = useState({})
-
-  // Use scene instead of nodes
   const { scene } = useGLTF('/models/car/scene.gltf')
 
   useEffect(() => {
-    const handleKeyDown = (e) =>
-      setKeysPressed((k) => ({ ...k, [e.key.toLowerCase()]: true }))
-    const handleKeyUp = (e) =>
-      setKeysPressed((k) => ({ ...k, [e.key.toLowerCase()]: false }))
-
-    window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('keyup', handleKeyUp)
-
+    const down = (e) => setKeysPressed((k) => ({ ...k, [e.key.toLowerCase()]: true }))
+    const up = (e) => setKeysPressed((k) => ({ ...k, [e.key.toLowerCase()]: false }))
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
     return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('keyup', handleKeyUp)
+      window.removeEventListener('keydown', down)
+      window.removeEventListener('keyup', up)
     }
   }, [])
 
-  useFrame(({ camera }) => {
-    if (!carRef.current) return
-
+  useFrame((state, delta) => {
     const body = carRef.current
-    const posRaw = body.translation()
-    const pos = new THREE.Vector3(posRaw.x, posRaw.y, posRaw.z)
+    if (!body) return
 
-    // Steering
-    if (keysPressed['a'] || keysPressed['arrowleft'])
-      setRotationY((r) => r + turnSpeed)
-    if (keysPressed['d'] || keysPressed['arrowright'])
-      setRotationY((r) => r - turnSpeed)
-    if (keysPressed['r'])
-      setRotationY((r) => r=0)
+    const impulse = new THREE.Vector3()
+    const torque = new THREE.Vector3()
 
-    // Movement
-    let direction = 0
-    if (keysPressed['w'] || keysPressed['arrowup']) direction = 1
-    if (keysPressed['s'] || keysPressed['arrowdown']) direction = -1
+    const rot = body.rotation()
+    const quaternion = new THREE.Quaternion(rot.x, rot.y, rot.z, rot.w)
 
-    const forwardX = Math.sin(rotationY) * direction
-    const forwardZ = Math.cos(rotationY) * direction
-    const move = new THREE.Vector3(forwardX, 0, forwardZ)
-      .normalize()
-      .multiplyScalar(speed)
+    if (keysPressed['w'] || keysPressed['arrowup']) {
+      impulse.z = -speed * delta
+    }
+    if (keysPressed['s'] || keysPressed['arrowdown']) {
+      impulse.z = speed * delta
+    }
 
-    body.setNextKinematicTranslation({
-      x: pos.x + move.x,
-      y: pos.y,
-      z: pos.z + move.z
-    })
+    if (impulse.lengthSq() > 0) {
+      impulse.applyQuaternion(quaternion)
+      body.applyImpulse(impulse, true)
+    }
 
-    const quaternion = new THREE.Quaternion().setFromEuler(
-      new THREE.Euler(0, rotationY, 0)
-    )
-    body.setNextKinematicRotation(quaternion)
+    if (keysPressed['a'] || keysPressed['arrowleft']) {
+      torque.y += turnSpeed * delta
+    }
+    if (keysPressed['d'] || keysPressed['arrowright']) {
+      torque.y -= turnSpeed * delta
+    }
 
-    // Camera follow
-    const scaleFactor = 0.5
-    const cameraOffset = new THREE.Vector3(
-      Math.sin(rotationY + Math.PI) * 20 * scaleFactor,
-      12 * scaleFactor,
-      Math.cos(rotationY + Math.PI) * 20 * scaleFactor
-    )
-    const cameraTarget = pos.clone().add(cameraOffset)
-    camera.position.lerp(cameraTarget, 0.1)
-    camera.lookAt(pos)
+    if (torque.lengthSq() > 0) {
+      body.applyTorqueImpulse(torque, true)
+    }
+
+    const pos = body.translation()
+    const camOffset = new THREE.Vector3(0, 6, -12).applyQuaternion(quaternion)
+    const camPos = new THREE.Vector3(pos.x, pos.y, pos.z).add(camOffset)
+    state.camera.position.lerp(camPos, 0.1)
+    state.camera.lookAt(pos.x, pos.y, pos.z)
   })
 
   return (
     <RigidBody
       ref={carRef}
-      type="kinematicPosition"
+      type="dynamic"
+      mass={1}
+      friction={1}
+      restitution={0.3}
+      angularDamping={4}
+      linearDamping={1}
       colliders="hull"
     >
-      <group
-        scale={[1.5, 1.5, 1.5]}
-        dispose={null}
-      >
+      <group scale={[1.5, 1.5, 1.5]}>
         <primitive object={scene} />
       </group>
     </RigidBody>
   )
 }
 
-// Preload GLTF
 useGLTF.preload('/models/car/scene.gltf')

@@ -52,7 +52,7 @@ export default function Football({ position, onGoal }) {
       colliders="ball"
       restitution={1}  // Reduced for less bounce
       friction={0.7}
-      linearDamping={0.3} // Adds air resistance
+      linearDamping={0.3} 
       position={position}
     >
       <primitive object={scene} />
