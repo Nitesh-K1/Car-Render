@@ -19,14 +19,14 @@ export default function Football({ position, onGoal }) {
     if (!body.current) return;
 
     // Goal detection logic
-    const pos = body.current.translation();
-    if (pos.z < -48 && Math.abs(pos.x) < 5) {
-      onGoal('teamB');
-      reset();
-    } else if (pos.z > 48 && Math.abs(pos.x) < 5) {
-      onGoal('teamA');
-      reset();
-    }
+    // const pos = body.current.translation();
+    // if (pos.z < -48 && Math.abs(pos.x) < 5) {
+    //   onGoal('teamB');
+    //   reset();
+    // } else if (pos.z > 48 && Math.abs(pos.x) < 5) {
+    //   onGoal('teamA');
+    //   reset();
+    // }
 
     // Speed limiting logic
     const currentVelocity = body.current.linvel();

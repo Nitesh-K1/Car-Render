@@ -4,7 +4,7 @@ import { useState } from 'react'
 import MovingCar from './components/MovingCar'
 import Football from './components/Football'
 import Ground from './components/Ground'
-import GoalPosts from './components/GoalPosts'
+// import GoalPosts from './components/GoalPosts'
 import Walls from './components/Walls'
 import CameraRig from './components/CameraRig'
 import { carObjectRef } from './refs'
@@ -29,7 +29,7 @@ export default function App() {
           <MovingCar />
           <Football position={[0, 1, 0]} onGoal={handleGoal} />
           <Ground />
-          <GoalPosts />
+          {/* <GoalPosts /> */}
           <Walls />
         </Physics>
         <CameraRig targetRef={carObjectRef} />
