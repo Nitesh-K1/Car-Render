@@ -9,8 +9,9 @@ export default function MovingCar() {
   const carRef = useRef()
   carObjectRef.current = carRef
 
-  const speed = 20
-  const turnSpeed = 5
+  const speed = 0.3
+  const turnSpeed = 0.02
+  const [rotationY, setRotationY] = useState(0)
   const [keysPressed, setKeysPressed] = useState({})
   const { scene } = useGLTF('/models/car/scene.gltf')
 
@@ -25,55 +26,47 @@ export default function MovingCar() {
     }
   }, [])
 
-  useFrame((state, delta) => {
+  useFrame((state) => {
     const body = carRef.current
-    if (!body) return
-
-    const impulse = new THREE.Vector3()
-    const torque = new THREE.Vector3()
-
-    const rot = body.rotation()
-    const quaternion = new THREE.Quaternion(rot.x, rot.y, rot.z, rot.w)
-
-    if (keysPressed['w'] || keysPressed['arrowup']) {
-      impulse.z = -speed * delta
-    }
-    if (keysPressed['s'] || keysPressed['arrowdown']) {
-      impulse.z = speed * delta
-    }
-
-    if (impulse.lengthSq() > 0) {
-      impulse.applyQuaternion(quaternion)
-      body.applyImpulse(impulse, true)
-    }
-
-    if (keysPressed['a'] || keysPressed['arrowleft']) {
-      torque.y += turnSpeed * delta
-    }
-    if (keysPressed['d'] || keysPressed['arrowright']) {
-      torque.y -= turnSpeed * delta
-    }
-
-    if (torque.lengthSq() > 0) {
-      body.applyTorqueImpulse(torque, true)
-    }
+    if (!body || !body.translation) return
 
     const pos = body.translation()
-    const camOffset = new THREE.Vector3(0, 6, -12).applyQuaternion(quaternion)
-    const camPos = new THREE.Vector3(pos.x, pos.y, pos.z).add(camOffset)
+    const position = new THREE.Vector3(pos.x, pos.y, pos.z)
+
+    if (keysPressed['a'] || keysPressed['arrowleft']) {
+      setRotationY((r) => r + turnSpeed)
+    }
+    if (keysPressed['d'] || keysPressed['arrowright']) {
+      setRotationY((r) => r - turnSpeed)
+    }
+
+    let direction = 0
+    if (keysPressed['w'] || keysPressed['arrowup']) direction = 1
+    if (keysPressed['s'] || keysPressed['arrowdown']) direction = -1
+
+    const forwardX = Math.sin(rotationY) * direction
+    const forwardZ = Math.cos(rotationY) * direction
+    const move = new THREE.Vector3(forwardX, 0, forwardZ).normalize().multiplyScalar(speed)
+
+    body.setNextKinematicTranslation({
+      x: position.x + move.x,
+      y: position.y,
+      z: position.z + move.z,
+    })
+
+    const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, rotationY, 0))
+    body.setNextKinematicRotation(quat)
+
+    const cameraOffset = new THREE.Vector3(0, 6, -12).applyQuaternion(quat)
+    const camPos = position.clone().add(cameraOffset)
     state.camera.position.lerp(camPos, 0.1)
-    state.camera.lookAt(pos.x, pos.y, pos.z)
+    state.camera.lookAt(position)
   })
 
   return (
     <RigidBody
       ref={carRef}
-      type="dynamic"
-      mass={1}
-      friction={1}
-      restitution={0.3}
-      angularDamping={4}
-      linearDamping={1}
+      type="kinematicPosition"
       colliders="hull"
     >
       <group scale={[1.5, 1.5, 1.5]}>

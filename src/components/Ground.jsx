@@ -8,7 +8,7 @@ export default function Ground() {
   useEffect(() => {
     scene.scale.set(1.5, 2, 1) // Adjust scale as needed
     scene.position.set(0, 0, 0)
-    scene.rotation.set(-Math.PI, 0, 0) // Rotate to lie flat
+    scene.rotation.set(Math.PI, 0, Math.PI) // Rotate to lie flat
   }, [scene])
 
   return (
