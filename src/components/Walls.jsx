@@ -3,7 +3,7 @@ import { RigidBody } from '@react-three/rapier'
 export default function FutsalWalls() {
   const wallThickness = 1
   const wallHeight = 20
-  const fieldSize = 50
+  const fieldSize = 58
 
   return (
     <>
