@@ -9,10 +9,13 @@ export default function MovingCar() {
   const carRef = useRef()
   carObjectRef.current = carRef
 
-  const speed = 0.3
-  const turnSpeed = 0.02
-  const [rotationY, setRotationY] = useState(0)
+  const maxSpeed = 10
+  const acceleration = 0.2
+  const turnSpeed = 1.5
   const [keysPressed, setKeysPressed] = useState({})
+  const [velocity, setVelocity] = useState(0)
+  const [rotation, setRotation] = useState(0)
+
   const { scene } = useGLTF('/models/car/scene.gltf')
 
   useEffect(() => {
@@ -26,37 +29,44 @@ export default function MovingCar() {
     }
   }, [])
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const body = carRef.current
     if (!body || !body.translation) return
 
     const pos = body.translation()
     const position = new THREE.Vector3(pos.x, pos.y, pos.z)
 
-    if (keysPressed['a'] || keysPressed['arrowleft']) {
-      setRotationY((r) => r + turnSpeed)
-    }
-    if (keysPressed['d'] || keysPressed['arrowright']) {
-      setRotationY((r) => r - turnSpeed)
-    }
+    // Calculate movement input
+    const moveForward = keysPressed['w'] || keysPressed['arrowup']
+    const moveBackward = keysPressed['s'] || keysPressed['arrowdown']
+    const turnLeft = keysPressed['a'] || keysPressed['arrowleft']
+    const turnRight = keysPressed['d'] || keysPressed['arrowright']
 
-    let direction = 0
-    if (keysPressed['w'] || keysPressed['arrowup']) direction = 1
-    if (keysPressed['s'] || keysPressed['arrowdown']) direction = -1
+    // Adjust speed
+    let newVelocity = velocity
+    if (moveForward) newVelocity = Math.min(maxSpeed, velocity - acceleration)
+    else if (moveBackward) newVelocity = Math.max(maxSpeed, velocity + acceleration)
+    else newVelocity *= 0.95 // slow down if no input
 
-    const forwardX = Math.sin(rotationY) * direction
-    const forwardZ = Math.cos(rotationY) * direction
-    const move = new THREE.Vector3(forwardX, 0, forwardZ).normalize().multiplyScalar(speed)
+    setVelocity(newVelocity)
 
-    body.setNextKinematicTranslation({
-      x: position.x + move.x,
-      y: position.y,
-      z: position.z + move.z,
-    })
+    // Adjust rotation
+    let newRotation = rotation
+    if (turnLeft) newRotation += turnSpeed * delta
+    if (turnRight) newRotation -= turnSpeed * delta
+    setRotation(newRotation)
 
-    const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, rotationY, 0))
-    body.setNextKinematicRotation(quat)
+    const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, newRotation, 0))
+    const forwardDir = new THREE.Vector3(0, 0, -1).applyQuaternion(quat).normalize()
+    const movement = forwardDir.clone().multiplyScalar(newVelocity)
 
+    // Apply linear velocity
+    body.setLinvel({ x: movement.x, y: body.linvel().y, z: movement.z }, true)
+
+    // Set rotation (but don't use angular velocity, it spins too much)
+    body.setRotation(quat, true)
+
+    // Camera follow
     const cameraOffset = new THREE.Vector3(0, 6, -12).applyQuaternion(quat)
     const camPos = position.clone().add(cameraOffset)
     state.camera.position.lerp(camPos, 0.1)
@@ -66,8 +76,11 @@ export default function MovingCar() {
   return (
     <RigidBody
       ref={carRef}
-      type="kinematicPosition"
+      type="dynamic"
       colliders="hull"
+      linearDamping={1.5}
+      angularDamping={3}
+      friction={1}
     >
       <group scale={[1.5, 1.5, 1.5]}>
         <primitive object={scene} />
