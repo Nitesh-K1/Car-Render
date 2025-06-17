@@ -30,48 +30,52 @@ export default function MovingCar() {
   }, [])
 
   useFrame((state, delta) => {
-    const body = carRef.current
-    if (!body || !body.translation) return
+  const body = carRef.current
+  if (!body || !body.translation) return
 
-    const pos = body.translation()
-    const position = new THREE.Vector3(pos.x, pos.y, pos.z)
+  const pos = body.translation()
+  const position = new THREE.Vector3(pos.x, pos.y, pos.z)
 
-    // Calculate movement input
-    const moveForward = keysPressed['w'] || keysPressed['arrowup']
-    const moveBackward = keysPressed['s'] || keysPressed['arrowdown']
-    const turnLeft = keysPressed['a'] || keysPressed['arrowleft']
-    const turnRight = keysPressed['d'] || keysPressed['arrowright']
+  const moveForward = keysPressed['w'] || keysPressed['arrowup']
+  const moveBackward = keysPressed['s'] || keysPressed['arrowdown']
+  const turnLeft = keysPressed['a'] || keysPressed['arrowleft']
+  const turnRight = keysPressed['d'] || keysPressed['arrowright']
+  const braking = keysPressed['f']
 
-    // Adjust speed
-    let newVelocity = velocity
-    if (moveForward) newVelocity = Math.min(maxSpeed, velocity - acceleration)
-    else if (moveBackward) newVelocity = Math.max(maxSpeed, velocity + acceleration)
-    else newVelocity *= 0.95 // slow down if no input
+  let newVelocity = velocity
 
-    setVelocity(newVelocity)
+  if (braking) {
+    newVelocity = 0
+    body.setLinvel({ x: 0, y: body.linvel().y, z: 0 }, true) // stop immediately
+  } else if (moveForward) {
+    newVelocity = Math.max(-maxSpeed, velocity - acceleration)
+  } else if (moveBackward) {
+    newVelocity = Math.min(maxSpeed, velocity + acceleration)
+  } else {
+    newVelocity *= 0.95 // natural deceleration
+  }
 
-    // Adjust rotation
-    let newRotation = rotation
-    if (turnLeft) newRotation += turnSpeed * delta
-    if (turnRight) newRotation -= turnSpeed * delta
-    setRotation(newRotation)
+  setVelocity(newVelocity)
 
-    const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, newRotation, 0))
-    const forwardDir = new THREE.Vector3(0, 0, -1).applyQuaternion(quat).normalize()
-    const movement = forwardDir.clone().multiplyScalar(newVelocity)
+  let newRotation = rotation
+  if (turnLeft) newRotation += turnSpeed * delta
+  if (turnRight) newRotation -= turnSpeed * delta
+  setRotation(newRotation)
 
-    // Apply linear velocity
-    body.setLinvel({ x: movement.x, y: body.linvel().y, z: movement.z }, true)
+  const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, newRotation, 0))
+  const forwardDir = new THREE.Vector3(0, 0, -1).applyQuaternion(quat).normalize()
+  const movement = forwardDir.clone().multiplyScalar(newVelocity)
 
-    // Set rotation (but don't use angular velocity, it spins too much)
-    body.setRotation(quat, true)
+  body.setLinvel({ x: movement.x, y: body.linvel().y, z: movement.z }, true)
+  body.setRotation(quat, true)
 
-    // Camera follow
-    const cameraOffset = new THREE.Vector3(0, 6, -12).applyQuaternion(quat)
-    const camPos = position.clone().add(cameraOffset)
-    state.camera.position.lerp(camPos, 0.1)
-    state.camera.lookAt(position)
-  })
+  const cameraOffset = new THREE.Vector3(0, 6, -12).applyQuaternion(quat)
+  const camPos = position.clone().add(cameraOffset)
+  state.camera.position.lerp(camPos, 0.1)
+  state.camera.lookAt(position)
+})
+
+
 
   return (
     <RigidBody
