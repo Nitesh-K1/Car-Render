@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { RigidBody } from '@react-three/rapier'
+import { RigidBody, useRapier } from '@react-three/rapier'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { carObjectRef } from '../refs'
@@ -8,24 +8,21 @@ import { carObjectRef } from '../refs'
 export default function MovingCar() {
   const carRef = useRef()
   carObjectRef.current = carRef
-
   const maxSpeed = 20
   const acceleration = 0.8
   const turnSpeed = 1.5
   const [keysPressed, setKeysPressed] = useState({})
   const [velocity, setVelocity] = useState(0)
   const [rotation, setRotation] = useState(0)
-
   const { camera } = useThree()
   const engineSoundRef = useRef()
-
+  const bouncingRef = useRef(false)
   const { scene } = useGLTF('/models/car/scene.gltf')
+  const { world } = useRapier()
 
-  // Load engine sound once
   useEffect(() => {
     const listener = new THREE.AudioListener()
     camera.add(listener)
-
     const sound = new THREE.Audio(listener)
     const loader = new THREE.AudioLoader()
     loader.load('/models/engine.mp3', (buffer) => {
@@ -33,16 +30,13 @@ export default function MovingCar() {
       sound.setLoop(true)
       sound.setVolume(0.5)
     })
-
     engineSoundRef.current = sound
-
     return () => {
       camera.remove(listener)
       sound.stop()
     }
   }, [camera])
 
-  // Keyboard listeners
   useEffect(() => {
     const down = (e) => setKeysPressed((k) => ({ ...k, [e.key.toLowerCase()]: true }))
     const up = (e) => setKeysPressed((k) => ({ ...k, [e.key.toLowerCase()]: false }))
@@ -53,8 +47,8 @@ export default function MovingCar() {
       window.removeEventListener('keyup', up)
     }
   }, [])
-
   useFrame((state, delta) => {
+    if (bouncingRef.current) return
     const body = carRef.current
     if (!body || !body.translation) return
 
@@ -68,7 +62,6 @@ export default function MovingCar() {
     const braking = keysPressed['f']
 
     let newVelocity = velocity
-
     if (braking) {
       newVelocity = 0
       body.setLinvel({ x: 0, y: body.linvel().y, z: 0 }, true)
@@ -79,10 +72,8 @@ export default function MovingCar() {
     } else {
       newVelocity *= 0.95
     }
-
     setVelocity(newVelocity)
 
-    // 🔊 Play or stop engine sound based on velocity
     const sound = engineSoundRef.current
     if (sound && sound.buffer) {
       if (Math.abs(newVelocity) > 0.1) {
@@ -112,17 +103,27 @@ export default function MovingCar() {
 
   return (
     <RigidBody
-      ref={carRef}
-      type="dynamic"
-      colliders="hull"
-      linearDamping={1.5}
-      angularDamping={3}
-      friction={1}
-    >
-      <group scale={[1.5, 1.5, 1.5]}>
-        <primitive object={scene} />
-      </group>
-    </RigidBody>
+  ref={carRef}
+  type="dynamic"
+  colliders="hull"
+  linearDamping={1.5}
+  angularDamping={3}
+  friction={1}
+  restitution={1}
+  onCollisionEnter={({ other }) => {
+    if (other.rigidBodyObject?.name === 'wall') {
+      bouncingRef.current = true
+      setTimeout(() => {
+        bouncingRef.current = false
+      }, 200)
+    }
+  }}
+>
+  <group scale={[1.5, 1.5, 1.5]}>
+    <primitive object={scene} />
+  </group>
+</RigidBody>
+
   )
 }
 

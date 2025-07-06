@@ -6,9 +6,9 @@ export default function Ground() {
   const { scene } = useGLTF('/models/ground/scene.gltf')
 
   useEffect(() => {
-    scene.scale.set(1.5, 2, 1) // Adjust scale as needed
+    scene.scale.set(1.5, 2, 1)
     scene.position.set(0, 0, 0)
-    scene.rotation.set(Math.PI, 0, Math.PI) // Rotate to lie flat
+    scene.rotation.set(Math.PI, 0, Math.PI)
   }, [scene])
 
   return (
